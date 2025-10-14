@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # MongoDB - для товаров и пользователей
+  mongodb:
+    image: mongo:6.0
+    container_name: ecommerce-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: mongodb123
+      MONGO_INITDB_DATABASE: ecommerce
+    volumes:
+      - mongodb_data:/data/db
+      - ./databases/mongodb/init.js:/docker-entrypoint-initdb.d/init.js:ro
+    networks:
+      - ecommerce-network
+
+  # PostgreSQL - для заказов и платежей
+  postgresql:
+    image: postgres:15
+    container_name: ecommerce-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: postgres123
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+      - ./databases/postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - ecommerce-network
+
+  # Redis - для кеша и сессий
+  redis:
+    image: redis:7.2-alpine
+    container_name: ecommerce-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass redis123
+    volumes:
+      - redis_data:/data
+    networks:
+      - ecommerce-network
+
+  # Auth Service - сервис аутентификации
+  auth-service:
+    build: ./backend/auth-service
+    container_name: ecommerce-auth
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      - NODE_ENV=development
+      - PORT=5001
+      - MONGODB_URI=mongodb://admin:mongodb123@mongodb:27017/ecommerce?authSource=admin
+      - JWT_SECRET=your_super_secret_jwt_key_change_in_production
+      - JWT_EXPIRES_IN=7d
+      - BCRYPT_SALT_ROUNDS=12
+      - REDIS_URL=redis://:redis123@redis:6379
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Products Service - сервис управления товарами
+  products-service:
+    build: ./backend/products-service
+    container_name: ecommerce-products
+    restart: unless-stopped
+    ports:
+      - "5002:5002"
+    environment:
+      - NODE_ENV=development
+      - PORT=5002
+      - MONGODB_URI=mongodb://admin:mongodb123@mongodb:27017/ecommerce?authSource=admin
+      - AUTH_SERVICE_URL=http://auth-service:5001
+      - REDIS_URL=redis://:redis123@redis:6379
+    depends_on:
+      - mongodb
+      - redis
+      - auth-service
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mongodb_data:
+  postgresql_data:
+  redis_data:
+
+networks:
+  ecommerce-network:
+    driver: bridge
