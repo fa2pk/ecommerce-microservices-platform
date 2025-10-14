@@ -1,28 +1,37 @@
 # 🛍️ E-commerce Microservices Platform
 
-![Microservices](https://img.shields.io/badge/Architecture-Microservices-blue)
-![Docker](https://img.shields.io/badge/Container-Docker-green)
-![Node.js](https://img.shields.io/badge/Runtime-Node.js-brightgreen)
+Простой интернет-магазин на микросервисной архитектуре.
 
-Полнофункциональная e-commerce платформа на микросервисной архитектуре.
+## 🚀 Быстрый старт
 
-## 🏗️ Архитектура
-┌─────────────────┐ ┌──────────────────┐
-│ React Frontend│ │ API Gateway │
-│ (Coming Soon) │ │ (Coming Soon) │
-└─────────────────┘ └──────────────────┘
-│ │
-└───────────────────────┼───────────────────────┘
-│
-┌─────────────┬─────────────┬─────────────┐
-│ │ │ │
-▼ ▼ ▼ ▼
-┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
-│ Auth │ │Products │ │ Cart │ │ Orders │
-│ Service │ │ Service │ │ Service │ │ Service │
-└─────────┘ └─────────┘ └─────────┘ └─────────┘
-│ │ │ │
-▼ ▼ ▼ ▼
-┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
-│ MongoDB │ │ MongoDB │ │ Redis │ │PostgreSQL│
-└─────────┘ └─────────┘ └─────────┘ └─────────┘
+```bash
+# 1. Клонировать проект
+git clone https://github.com/fa2pk/ecommerce-microservices-platform.git
+cd ecommerce-microservices-platform
+
+# 2. Запустить все сервисы
+docker compose up -d
+
+# 3. Проверить что всё работает
+docker ps
+
+🛠️ Что внутри
+Auth Service - регистрация и вход пользователей
+
+Products Service - управление товарами
+
+MongoDB - база для пользователей и товаров
+
+PostgreSQL - база для заказов
+
+Redis - кеш и сессии
+
+Docker - всё запускается в контейнерах
+
+📁 Структура проекта
+
+backend/
+├── auth-service/      # Сервис авторизации
+├── products-service/  # Сервис товаров
+databases/            # Настройки баз данных
+docker-compose.yml    # Конфигурация Docker
